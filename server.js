@@ -7,9 +7,25 @@ require('dotenv').config();
 
 require("./config/dbConnect"); // Import the database connection
 const app = express();
-
+app.use(express.json()); 
 // Middleware
 
+const userAuth = {
+  isLogin: false,
+  isAdmin: false,
+};
+
+app.use((req, res, next) => {
+  // if (userAuth.isLogin) {
+  // }
+  // else {
+  //   return res.json({
+  //     msg: "Invalid login credentials",
+  //   });
+  // }
+  next();
+});
+  
 //routes
 //-----------------
 // user routes
