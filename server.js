@@ -3,6 +3,7 @@ const userRouter = require('./routes/users/userRoutes');
 const postRouter = require('./routes/posts/postRoutes');
 const commentRouter = require('./routes/comments/commentRoutes');
 const categoryRouter = require('./routes/categories/categoryRoutes');
+const globalErrHandler = require('./middlewares/globalErrHandler');
 require('dotenv').config(); 
 
 require("./config/dbConnect"); // Import the database connection
@@ -48,7 +49,15 @@ app.use('/api/v1/comments/', commentRouter);
 app.use('/api/v1/categories/', categoryRouter);
 
 // Error handling middleware
+app.use(globalErrHandler);
 
+//404 error
+app.use( (req, res) => {
+  res.status(404).json({
+
+    message: `${req.originalUrl} Not Found`,
+  });
+});
 // Listen to server
 const PORT = process.env.PORT || 9000;
 app.listen(PORT, () => {
