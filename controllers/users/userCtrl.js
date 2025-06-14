@@ -142,6 +142,35 @@ const updateUserCtrl = async (req, res) => {
   }
 };
 
+// Profile picture upload
+const profilePictureUploadCtrl = async (req, res, next) => {
+  console.log(req.file); // kiểm tra file có được nhận
+  try {
+    const usertoUpdate = await User.findById(req.userAuth);
+    if (!usertoUpdate) {
+      return next(appErr('User not found', 404));
+    }
+    if (usertoUpdate.isBlocked) {
+      return next(appErr('Action not allowed, your account is blocked', 403));
+    }
+    if (req.file) {
+      await User.findByIdAndUpdate(
+        req.userAuth,
+        { $set: { profilePhoto: req.file.path } },
+        { new: true }
+      );
+      return res.json({
+        status: 'success',
+        data: 'Profile picture uploaded successfully'
+      });
+    } else {
+      return next(appErr('No file uploaded', 400));
+    }
+  } catch (error) {
+    return next(appErr(error.message));
+  }
+};
+
 module.exports = {
     userRegisterCtrl,
     userLoginCtrl,
@@ -149,4 +178,5 @@ module.exports = {
     UsersCtrl,
     deleteUserCtrl,
     updateUserCtrl,
+    profilePictureUploadCtrl
 };
