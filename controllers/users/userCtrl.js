@@ -215,6 +215,125 @@ const UsersCtrl = async (req, res) => {
   }
 };
 
+//block
+const blockUsersCtrl = async (req, res, next) => {
+  try {
+    // Tìm người bị chặn
+    const userToBlock = await User.findById(req.params.id);
+    // Tìm người đang chặn
+    const userBlocking = await User.findById(req.userAuth);
+
+    if (!userToBlock || !userBlocking) {
+      return next(appErr('User not found', 404));
+    }
+
+    // Kiểm tra đã chặn chưa
+    const alreadyBlocked = userBlocking.blocked.find(
+      blockedUser => blockedUser.toString() === userToBlock._id.toString()
+    );
+
+    if (alreadyBlocked) {
+      return next(appErr('You have already blocked this user', 400));
+    }
+
+    // Thêm vào danh sách bị chặn
+    userBlocking.blocked.push(userToBlock._id);
+    await userBlocking.save();
+
+    return res.json({
+      status: 'success',
+      data: 'You have successfully blocked this user',
+    });
+  } catch (error) {
+    return next(appErr(error.message));
+  }
+};
+
+//unblock
+const unblockUserCtrl = async (req, res, next) => {
+  try {
+    // Tìm người bị gỡ chặn
+    const userToUnblock = await User.findById(req.params.id);
+    // Tìm người đang gỡ chặn
+    const userUnblocking = await User.findById(req.userAuth);
+
+    if (!userToUnblock || !userUnblocking) {
+      return next(appErr('User not found', 404));
+    }
+
+    // Kiểm tra xem người này có đang bị chặn không
+    const isBlocked = userUnblocking.blocked.find(
+      blockedUser => blockedUser.toString() === userToUnblock._id.toString()
+    );
+
+    if (!isBlocked) {
+      return next(appErr('You have not blocked this user', 400));
+    }
+
+    // Gỡ chặn bằng cách filter ra khỏi danh sách
+    userUnblocking.blocked = userUnblocking.blocked.filter(
+      blockedUser => blockedUser.toString() !== userToUnblock._id.toString()
+    );
+
+    await userUnblocking.save();
+
+    return res.json({
+      status: 'success',
+      data: 'You have successfully unblocked this user',
+    });
+  } catch (error) {
+    return next(appErr(error.message));
+  }
+};
+
+//admin block user
+const adminBlockUserCtrl = async (req, res, next) => {
+  try {
+    const usertobeBlocked = await User.findById(req.params.id);
+    if (!usertobeBlocked) {
+      return next(appErr('User not found', 404));
+    }
+    usertobeBlocked.isBlocked = true;
+    await usertobeBlocked.save();
+
+    res.json({
+      status: 'success',
+      data: 'You have successfully blocked this user',
+    });
+  } catch (error) {
+    res.json({
+      status: 'error',
+      message: error.message
+    });
+  }
+};
+
+// Admin unblock user
+const adminUnblockUserCtrl = async (req, res, next) => {
+  try {
+    // Tìm người dùng cần được gỡ chặn
+    const userToUnblock = await User.findById(req.params.id);
+
+    if (!userToUnblock) {
+      return next(appErr('User not found', 404));
+    }
+
+    // Cập nhật trạng thái chặn
+    userToUnblock.isBlocked = false;
+    await userToUnblock.save();
+
+    return res.json({
+      status: 'success',
+      data: 'You have successfully unblocked this user',
+    });
+  } catch (error) {
+    return res.json({
+      status: 'error',
+      message: error.message
+    });
+  }
+};
+
 // Delete user
 const deleteUserCtrl = async (req, res) => {
   try {
@@ -288,4 +407,8 @@ module.exports = {
     whoViewdMyProfileCtrl,
     followingCtrl,
     unfollowCtrl,
+    blockUsersCtrl,
+    unblockUserCtrl,
+    adminBlockUserCtrl,
+    adminUnblockUserCtrl,
 };

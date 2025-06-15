@@ -8,11 +8,16 @@ const { userRegisterCtrl,
     profilePictureUploadCtrl,
     whoViewdMyProfileCtrl,
     followingCtrl, 
-    unfollowCtrl } = require('../../controllers/users/userCtrl');
+    unfollowCtrl,
+    blockUsersCtrl,
+    unblockUserCtrl,
+    adminBlockUserCtrl,
+    adminUnblockUserCtrl, } = require('../../controllers/users/userCtrl');
 const isLogin = require('../../middlewares/isLogin');
 const storage = require('../../config/cloudinary');
 const userRouter = express.Router();
 const multer = require('multer');
+const isAdmin = require('../../middlewares/isAdmin');
 
 
 // instance of multer 
@@ -41,7 +46,14 @@ userRouter.get('/following/:id', isLogin, followingCtrl);
 
 //GET/api/v1/users/unfollow/:id
 userRouter.get('/unfollow/:id', isLogin, unfollowCtrl);
-
+// GET/api/v1/users/block/:id
+userRouter.get('/block/:id', isLogin, blockUsersCtrl);
+// GET/api/v1/users/unblock/:id
+userRouter.get('/unblock/:id', isLogin, unblockUserCtrl);
+// GET/api/v1/users/admin-block/:id
+userRouter.get('/admin-block/:id', isLogin, isAdmin, adminBlockUserCtrl);
+// GET/api/v1/users/admin-unblock/:id
+userRouter.get('/admin-unblock/:id', isLogin, isAdmin, adminUnblockUserCtrl);
 // POST/api/v1/users/profile-picture
 userRouter.post('/profile-photo-upload',
     isLogin,
