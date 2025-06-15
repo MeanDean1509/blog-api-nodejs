@@ -77,6 +77,112 @@ const userLoginCtrl = async (req, res) => {
   }
 };
 
+// who views the profile
+const whoViewdMyProfileCtrl = async (req, res, next) => {
+  try {
+    // find the original user
+    const user = await User.findById(req.params.id);
+    // find the user who viewed the profile
+    const userWhoViewed = await User.findById(req.userAuth);
+    // check original user and viewer are found
+    if (user && userWhoViewed) {
+      const isUserAlreadyViewed = user.viewers.find(viewers => viewers.toString() === userWhoViewed._id.toJSON());
+      if (isUserAlreadyViewed) {
+        return next(appErr('You have already viewed this profile', 400));
+    }
+    else {
+      user.viewers.push(userWhoViewed._id);
+      await user.save();
+  
+      res.json({
+        status: 'success',
+        data: 'You have successfully viewed the profile',
+      });
+    }
+  }
+  } catch (error) {
+    res.json(error.message);
+  }
+};
+
+//following
+const followingCtrl = async (req, res, next) => {
+  try {
+    const userToFollow = await User.findById(req.params.id);
+    const userWhoFollowed = await User.findById(req.userAuth);
+
+    if (!userToFollow || !userWhoFollowed) {
+      return next(appErr('User not found', 404));
+    }
+
+    const isAlreadyFollowed = userToFollow.followers.find(
+      follower => follower.toString() === userWhoFollowed._id.toString()
+    );
+
+    if (isAlreadyFollowed) {
+      return next(appErr('You are already following this user', 400));
+    }
+
+    userToFollow.followers.push(userWhoFollowed._id);
+    userWhoFollowed.following.push(userToFollow._id);
+
+    await userToFollow.save();
+    await userWhoFollowed.save();
+
+    return res.json({
+      status: 'success',
+      data: 'You are successfully following this user',
+    });
+  } catch (error) {
+    return next(appErr(error.message));
+  }
+};
+
+// unfollow 
+const unfollowCtrl = async (req, res, next) => {
+  try {
+    // Tìm người bị bỏ theo dõi
+    const userToUnfollow = await User.findById(req.params.id);
+    // Tìm người đang bỏ theo dõi
+    const userWhoUnfollowed = await User.findById(req.userAuth);
+
+    if (!userToUnfollow || !userWhoUnfollowed) {
+      return next(appErr('User not found', 404));
+    }
+
+    // Kiểm tra xem người dùng đã theo dõi trước đó chưa
+    const isFollowing = userToUnfollow.followers.find(
+      follower => follower.toString() === userWhoUnfollowed._id.toString()
+    );
+
+    if (!isFollowing) {
+      return next(appErr('You are not following this user', 400));
+    }
+
+    // Xóa ID khỏi followers của người bị bỏ theo dõi
+    userToUnfollow.followers = userToUnfollow.followers.filter(
+      follower => follower.toString() !== userWhoUnfollowed._id.toString()
+    );
+
+    // Xóa ID khỏi following của người đang bỏ theo dõi
+    userWhoUnfollowed.following = userWhoUnfollowed.following.filter(
+      following => following.toString() !== userToUnfollow._id.toString()
+    );
+
+    await userToUnfollow.save();
+    await userWhoUnfollowed.save();
+
+    return res.json({
+      status: 'success',
+      data: 'You have successfully unfollowed this user',
+    });
+  } catch (error) {
+    return next(appErr(error.message));
+  }
+};
+
+
+
 // profile
 const userProfileCtrl = async (req, res) => {
   try {
@@ -178,5 +284,8 @@ module.exports = {
     UsersCtrl,
     deleteUserCtrl,
     updateUserCtrl,
-    profilePictureUploadCtrl
+    profilePictureUploadCtrl, 
+    whoViewdMyProfileCtrl,
+    followingCtrl,
+    unfollowCtrl,
 };
