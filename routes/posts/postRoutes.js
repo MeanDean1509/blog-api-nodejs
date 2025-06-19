@@ -1,24 +1,12 @@
 const express = require('express');
-const { model } = require('mongoose');
+const { createPostCtrl } = require('../../controllers/posts/postCtrl');
 
+const isLogin = require('../../middlewares/isLogin');
 const postRouter = express.Router();
 
 // POST/api/v1/posts
-postRouter.post('/', async (req, res)=> {
-  try {
-    // Logic to create a user
-    res.json({
-      status: 'success',
-      data: 'post created'
-    });
-     
-  } catch (error) {
-      res.json({
-        status: 'error',
-        message: error.message
-      });
-  }
-});
+postRouter.post('/', isLogin, createPostCtrl);
+ 
 
 
 

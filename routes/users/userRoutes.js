@@ -17,7 +17,7 @@ const isLogin = require('../../middlewares/isLogin');
 const storage = require('../../config/cloudinary');
 const userRouter = express.Router();
 const multer = require('multer');
-const isAdmin = require('../../middlewares/isAdmin');
+const isAdmin = require('../../middlewares/isAdmin.js');
 
 
 // instance of multer 

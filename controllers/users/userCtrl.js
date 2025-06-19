@@ -202,10 +202,10 @@ const userProfileCtrl = async (req, res) => {
 // Get all users
 const UsersCtrl = async (req, res) => {
   try {
-    // Logic to get all users
+    const users = await User.find();
     res.json({
       status: 'success',
-      data: 'all users route'
+      data: users,
     });
   } catch (error) {
     res.json({
