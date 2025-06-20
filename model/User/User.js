@@ -97,7 +97,7 @@ userSchema.pre("findOne", async function(next) {
     const posts = await Post.find({ user: userId });
     const lastPost = posts[posts.length - 1];
     //get the last post date
-    const lastPostDate = new Date(lastPost.createdAt);
+    const lastPostDate = new Date(lastPost?.createdAt);
     const lastPostDateString = lastPostDate.toLocaleDateString();   
     userSchema.virtual('lastPostDate').get(function() {
         return lastPostDateString;

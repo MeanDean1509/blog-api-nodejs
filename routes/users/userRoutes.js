@@ -12,7 +12,8 @@ const { userRegisterCtrl,
     blockUsersCtrl,
     unblockUserCtrl,
     adminBlockUserCtrl,
-    adminUnblockUserCtrl, } = require('../../controllers/users/userCtrl');
+    adminUnblockUserCtrl, 
+    updatePasswordCtrl,} = require('../../controllers/users/userCtrl');
 const isLogin = require('../../middlewares/isLogin');
 const storage = require('../../config/cloudinary');
 const userRouter = express.Router();
@@ -33,10 +34,10 @@ userRouter.get('/profile', isLogin, userProfileCtrl);
 // GET/api/v1/users
 userRouter.get('/', UsersCtrl);
 //Delete/api/v1/users/:id
-userRouter.delete('/:id', deleteUserCtrl);
+userRouter.delete('/',isLogin, deleteUserCtrl);
 
 // PUT/api/v1/users/:id
-userRouter.put('/:id', updateUserCtrl);
+userRouter.put('/',isLogin, updateUserCtrl);
 
 //GET/api/v1/users/profile-viewer/:id
 userRouter.get('/profile-viewer/:id',isLogin, whoViewdMyProfileCtrl);
@@ -59,5 +60,7 @@ userRouter.post('/profile-photo-upload',
     isLogin,
     upload.single("profile"), 
     profilePictureUploadCtrl);
+// PUT/api/v1/users/update-password
+userRouter.put('/update-password', isLogin, updatePasswordCtrl);
 
 module.exports = userRouter;

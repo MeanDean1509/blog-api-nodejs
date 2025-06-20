@@ -1,12 +1,15 @@
 const bcrypt = require('bcryptjs');
 const User = require('../../model/User/User'); 
+const Post = require('../../model/Post/Post');
+const Category = require('../../model/Category/Category');
+const Comment = require('../../model/Comment/Comment');
 const generateToken = require('../../utils/generateToken');
 const getTokenFromHeader = require('../../utils/getTokenFromHeader');
 const {appErr, AppErr} = require('../../utils/appErr');
 
 //Rerister
 const userRegisterCtrl = async (req, res, next)=> {
-  const {firstname, lastname, profilePhoto, email, password } = req.body;
+  const {firstname, lastname, email, password } = req.body;
   try {
 
     // Logic to create a user
@@ -39,17 +42,14 @@ const userRegisterCtrl = async (req, res, next)=> {
 };
 
 // Login
-const userLoginCtrl = async (req, res) => {
+const userLoginCtrl = async (req, res, next) => {
   const {email, password} = req.body;
   try {
     // Logic to login a user
     // Check email existence
     const userFound = await User.findOne({ email });
     if(!userFound) {
-      return res.json({
-        status: 'error',
-        message: 'Invalid email or password'
-      });
+      return next(new AppErr('Invalid email or password', 400));
     }
     //verify password
     const isPasswordMatches = await bcrypt.compare(password, userFound.password);
@@ -70,10 +70,7 @@ const userLoginCtrl = async (req, res) => {
       }
     });
   } catch (error) {
-    res.json({
-      status: 'error',
-      message: error.message
-    });
+    next(appErr(error.message));
   }
 };
 
@@ -101,7 +98,7 @@ const whoViewdMyProfileCtrl = async (req, res, next) => {
     }
   }
   } catch (error) {
-    res.json(error.message);
+    next(appErr(error.message));
   }
 };
 
@@ -134,7 +131,7 @@ const followingCtrl = async (req, res, next) => {
       data: 'You are successfully following this user',
     });
   } catch (error) {
-    return next(appErr(error.message));
+    next(appErr(error.message));
   }
 };
 
@@ -177,14 +174,14 @@ const unfollowCtrl = async (req, res, next) => {
       data: 'You have successfully unfollowed this user',
     });
   } catch (error) {
-    return next(appErr(error.message));
+    next(appErr(error.message));
   }
 };
 
 
 
 // profile
-const userProfileCtrl = async (req, res) => {
+const userProfileCtrl = async (req, res, next) => {
   try {
     const user = await User.findById(req.userAuth);
     res.json({
@@ -192,15 +189,13 @@ const userProfileCtrl = async (req, res) => {
       data: user
     });
   } catch (error) {
-    res.json({
-      status: 'error',
-      message: error.message
-    });
+    next(appErr(error.message));
+    
   }
 };
 
 // Get all users
-const UsersCtrl = async (req, res) => {
+const UsersCtrl = async (req, res, next) => {
   try {
     const users = await User.find();
     res.json({
@@ -208,10 +203,7 @@ const UsersCtrl = async (req, res) => {
       data: users,
     });
   } catch (error) {
-    res.json({
-      status: 'error',
-      message: error.message
-    });
+    next(appErr(error.message));
   }
 };
 
@@ -301,10 +293,7 @@ const adminBlockUserCtrl = async (req, res, next) => {
       data: 'You have successfully blocked this user',
     });
   } catch (error) {
-    res.json({
-      status: 'error',
-      message: error.message
-    });
+    return next(appErr(error.message));
   }
 };
 
@@ -327,45 +316,94 @@ const adminUnblockUserCtrl = async (req, res, next) => {
       data: 'You have successfully unblocked this user',
     });
   } catch (error) {
-    return res.json({
-      status: 'error',
-      message: error.message
-    });
+    next(appErr(error.message));
   }
 };
 
 // Delete user
-const deleteUserCtrl = async (req, res) => {
+const deleteUserCtrl = async (req, res, next) => {
   try {
-    
-    res.json({
+    // Tìm và xóa người dùng theo ID đã xác thực
+    const deletedUser = await User.findById(req.userAuth);
+
+    if (!deletedUser) {
+      return next(appErr('User not found', 404));
+    }
+    await Post.deleteMany({ user: req.userAuth }); 
+    await Category.deleteMany({ user: req.userAuth });
+    await Comment.deleteMany({ user: req.userAuth });
+    await deletedUser.deleteOne();
+    return res.json({
       status: 'success',
-      data: 'User deteted route'
+      data: 'Account deleted successfully',
     });
   } catch (error) {
-    res.json({
-      status: 'error',
-      message: error.message
-    });
+    return next(appErr(error.message));
   }
 };
 
+
 // Update user
-const updateUserCtrl = async (req, res) => {
+const updateUserCtrl = async (req, res, next) => {
+  const {email, lastname, firstname} = req.body;
   try {
-    const userId = req.params.id;
-    // Logic to update a user by ID
+    if (email) {
+      const emailTaken = await User.findOne({ email})
+      if (emailTaken) {
+        return next(appErr('Email already taken', 400));
+        
+    }};
+    //update the user
+    const user = await User.findByIdAndUpdate(req.userAuth,{
+      lastname,
+      firstname,
+      email
+    }, { new: true, runValidators: true });
     res.json({
       status: 'success',
-      data: 'update user route',
+      data: user
     });
   } catch (error) {
-    res.json({
-      status: 'error',
-      message: error.message
-    });
+    next(appErr(error.message));
+    
   }
 };
+
+// Update password
+const updatePasswordCtrl = async (req, res, next) => {
+  const { currentPassword, newPassword } = req.body;
+
+  try {
+    // Tìm user hiện tại
+    const user = await User.findById(req.userAuth);
+    if (!user) {
+      return next(appErr('User not found', 404));
+    }
+
+    // Kiểm tra mật khẩu hiện tại
+    const isPasswordMatched = await bcrypt.compare(currentPassword, user.password);
+    if (!isPasswordMatched) {
+      return next(appErr('Current password is incorrect', 400));
+    }
+
+    // Hash mật khẩu mới
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(newPassword, salt);
+
+    // Cập nhật mật khẩu
+    user.password = hashedPassword;
+    await user.save();
+
+    res.json({
+      status: 'success',
+      data: 'Password updated successfully',
+    });
+  } catch (error) {
+    return next(appErr(error.message));
+  }
+};
+
+
 
 // Profile picture upload
 const profilePictureUploadCtrl = async (req, res, next) => {
@@ -411,4 +449,5 @@ module.exports = {
     unblockUserCtrl,
     adminBlockUserCtrl,
     adminUnblockUserCtrl,
+    updatePasswordCtrl,
 };
