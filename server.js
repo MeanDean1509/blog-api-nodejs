@@ -4,6 +4,8 @@ const postRouter = require('./routes/posts/postRoutes');
 const commentRouter = require('./routes/comments/commentRoutes');
 const categoryRouter = require('./routes/categories/categoryRoutes');
 const globalErrHandler = require('./middlewares/globalErrHandler');
+const Post = require('./model/Post/Post');
+
 require('dotenv').config(); 
 
 require("./config/dbConnect"); // Import the database connection
