@@ -28,6 +28,23 @@ app.use((req, res, next) => {
 });
   
 //routes
+
+//home route
+
+app.get('/', async (req, res) => {
+  try {
+    const post =await Post.find();
+    res.status(200).json({
+      message: 'Success',
+      data: post,
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: 'Internal Server Error',
+      error: error.message,
+    });
+  }
+});
 //-----------------
 // user routes
 
