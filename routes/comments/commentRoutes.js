@@ -1,51 +1,16 @@
 const express = require('express');
+const isLogin = require('../../middlewares/isLogin');
 
 const commentRouter = express.Router();
-
+const {
+  createCommentCtrl,
+  deleteCommentCtrl,
+  updateCommentCtrl
+} = require('../../controllers/comments/commentCtrl');
 // POST/api/v1/comments
-commentRouter.post('/', async (req, res)=> {
-  try {
-    // Logic to create a comment
-    res.json({
-      status: 'success',
-      data: 'comment created'
-    });
-     
-  } catch (error) {
-      res.json({
-        status: 'error',
-        message: error.message
-      });
-  }
-});
-// GET/api/v1/comments/:id
-commentRouter.get('/:id', async (req, res) => {
-  try {
-    res.json({
-      status: 'success',
-      data: `comment route`
-    });
-  } catch (error) {
-    res.json({
-      status: 'error',
-      message: error.message
-    });
-  }
-});
+commentRouter.post('/:id', isLogin, createCommentCtrl);
 // DELETE/api/v1/comments/:id
-commentRouter.delete('/:id', async (req, res) => {
-  try {
-    res.json({
-      status: 'success',
-      data: 'Comment deteted route'
-    });
-  } catch (error) {
-    res.json({
-      status: 'error',
-      message: error.message
-    });
-  }
-});
-
-
+commentRouter.delete('/:id', isLogin, deleteCommentCtrl);
+// PUT/api/v1/comments/:id
+commentRouter.put('/:id', isLogin, updateCommentCtrl);
 module.exports = commentRouter;
