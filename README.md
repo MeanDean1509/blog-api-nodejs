@@ -16,6 +16,104 @@ Most endpoints require authentication. To authenticate, include the token receiv
 Authorization: Bearer <your_token>
 ```
 
+## Getting Started (Local Development)
+
+Follow these steps to set up the project locally:
+
+### Prerequisites
+
+- Node.js (v14 or later)
+- MongoDB (local installation or MongoDB Atlas account)
+- Git
+
+### Clone the Repository
+
+```bash
+git clone https://github.com/yourusername/blog-api.git
+cd blog-api
+```
+
+### Install Dependencies
+
+Using npm:
+```bash
+npm install
+```
+
+Or using yarn:
+```bash
+yarn install
+```
+
+### Environment Variables
+
+Create a `.env` file in the root directory with the following variables:
+
+```env
+# Server Configuration
+PORT=9000
+NODE_ENV=development
+
+# MongoDB Connection
+MONGODB_URI=mongodb://localhost:27017/blog-api
+# Or use MongoDB Atlas:
+# MONGODB_URI=mongodb+srv://<username>:<password>@cluster0.mongodb.net/blog-api
+
+# JWT Configuration
+JWT_SECRET_KEY=your_jwt_secret_key
+JWT_EXPIRES=7d
+
+# Cloudinary Configuration (for image uploads)
+CLOUDINARY_CLOUD_NAME=your_cloudinary_cloud_name
+CLOUDINARY_API_KEY=your_cloudinary_api_key
+CLOUDINARY_API_SECRET=your_cloudinary_api_secret
+```
+
+### Run the Development Server
+
+```bash
+# Using npm
+npm run server
+
+# Using yarn
+yarn server
+```
+
+The server will start on port 9000 (or the port specified in your .env file) with hot-reloading enabled.
+
+### Testing the API
+
+You can test the API using tools like:
+
+#### Postman
+1. Download and install [Postman](https://www.postman.com/downloads/)
+2. Create a new request collection
+3. Set the request URL (e.g., `http://localhost:9000/api/v1/users/register`)
+4. Choose the appropriate HTTP method
+5. Add request body/headers as needed
+6. Send the request
+
+#### cURL
+Example for registering a new user:
+```bash
+curl -X POST http://localhost:9000/api/v1/users/register \
+  -H "Content-Type: application/json" \
+  -d '{"firstname":"John","lastname":"Doe","email":"john@example.com","password":"securepassword"}'
+```
+
+Example for login (getting a token):
+```bash
+curl -X POST http://localhost:9000/api/v1/users/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"john@example.com","password":"securepassword"}'
+```
+
+Example for authenticated request:
+```bash
+curl -X GET http://localhost:9000/api/v1/users/profile \
+  -H "Authorization: Bearer YOUR_TOKEN_HERE"
+```
+
 ---
 
 ## User Endpoints
